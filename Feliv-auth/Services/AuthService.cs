@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Text;
 
@@ -10,18 +11,18 @@ namespace Feliv_auth.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _IConfiguration;
 
-        public AuthService(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration _IConfig)
+        public AuthService(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration _IConfig)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _IConfiguration = _IConfig;
         }
 
-        public async Task<AuthModel> RegisterAsync(RegisterModel model)
+        public async Task<AuthModel> RegisterAsync(RegisterModel model,string role)
         {
             if (await _userManager.FindByEmailAsync(model.Email) is not null)
                 return new AuthModel { Message = "Email is already registered!" };
@@ -29,27 +30,34 @@ namespace Feliv_auth.Services
             if (await _userManager.FindByNameAsync(model.Username) is not null)
                 return new AuthModel { Message = "Username is already registered!" };
 
-            var user = new ApplicationUser
+            var user = new IdentityUser
             {
                 UserName = model.Username,
                 Email = model.Email,
-                FirstName = model.FirstName,
-                LastName = model.LastName
             };
-
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (!result.Succeeded)
+            if(await _roleManager.RoleExistsAsync(role))
             {
-                var errors = string.Empty;
+                var result = await _userManager.CreateAsync(user, model.Password);
 
-                foreach (var error in result.Errors)
-                    errors += $"{error.Description},";
+                if (!result.Succeeded)
+                {
+                    var errors = string.Empty;
 
-                return new AuthModel { Message = errors };
+                    foreach (var error in result.Errors)
+                        errors += $"{error.Description},";
+
+                    return new AuthModel { Message = errors };
+                }
+                //add role to user
+                await _userManager.AddToRoleAsync(user, role);
+            }
+            else
+            {
+                return new AuthModel { Message = "The Roles Doesnot Exist!" };
+
             }
 
-            await _userManager.AddToRoleAsync(user, "User");
+
 
             var jwtSecurityToken = await CreateJwtToken(user);
 
@@ -58,7 +66,7 @@ namespace Feliv_auth.Services
                 Email = user.Email,
                 ExpiresOn = jwtSecurityToken.ValidTo,
                 IsAuthenticated = true,
-                Roles = new List<string> { "User" },
+                Roles = new List<string> { role },
                 Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken),
                 Username = user.UserName
             };
@@ -104,7 +112,7 @@ namespace Feliv_auth.Services
             return result.Succeeded ? string.Empty : "Sonething went wrong";
         }
 
-        private async Task<JwtSecurityToken> CreateJwtToken(ApplicationUser user)
+        private async Task<JwtSecurityToken> CreateJwtToken(IdentityUser user)
         {
             var userClaims = await _userManager.GetClaimsAsync(user);
             var roles = await _userManager.GetRolesAsync(user);

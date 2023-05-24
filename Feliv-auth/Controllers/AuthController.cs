@@ -16,12 +16,12 @@ namespace Feliv_auth.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> RegisterAsync([FromBody] RegisterModel model)
+        public async Task<IActionResult> RegisterAsync([FromBody] RegisterModel model, string role)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _authService.RegisterAsync(model);
+            var result = await _authService.RegisterAsync(model,role);
 
             if (!result.IsAuthenticated)
                 return BadRequest(result.Message);

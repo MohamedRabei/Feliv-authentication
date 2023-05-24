@@ -22,7 +22,7 @@ namespace Feliv_auth
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+            builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer("Data Source=.;Initial Catalog=Feliv-auth;Integrated Security = True;Encrypt=False"));
 
