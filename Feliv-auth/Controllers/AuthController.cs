@@ -1,5 +1,6 @@
 ﻿using Feliv_auth.Models;
 using Feliv_auth.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Feliv_auth.Controllers
@@ -44,7 +45,7 @@ namespace Feliv_auth.Controllers
 
             return Ok(result);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPost("addrole")]
         public async Task<IActionResult> AddRoleAsync([FromBody] AddRoleModel model)
         {

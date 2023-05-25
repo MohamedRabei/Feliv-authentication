@@ -1,5 +1,6 @@
 ﻿using Feliv_auth.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -47,6 +48,14 @@ namespace Feliv_auth.Services
                         errors += $"{error.Description},";
 
                     return new AuthModel { Message = errors };
+                }
+                var adminRoleExists = await _roleManager.FindByNameAsync("Admin");
+
+                //if (role == "Admin" || role == "admin")
+                if ( role == adminRoleExists.Name)
+                {
+                    // If the user selected the admin role, return a "Not Allowed" response
+                    return new AuthModel { Message = "Assigning admin role is not allowed during registration." };
                 }
                 //add role to user
                 await _userManager.AddToRoleAsync(user, role);
@@ -106,6 +115,18 @@ namespace Feliv_auth.Services
 
             if (await _userManager.IsInRoleAsync(user, model.Role))
                 return "User already assigned to this role";
+
+
+            var AllRoles = new[] { "Admin", "ApprovedStore", "PendingStore", "Customer" };
+            var userRole = await _userManager.GetRolesAsync(user);
+
+            foreach (var role in AllRoles)
+            {
+                if (userRole.Contains(role))
+                {
+                    await _userManager.RemoveFromRoleAsync(user, role);
+                }
+            }
 
             var result = await _userManager.AddToRoleAsync(user, model.Role);
 
