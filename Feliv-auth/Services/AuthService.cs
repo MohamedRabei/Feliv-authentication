@@ -49,24 +49,23 @@ namespace Feliv_auth.Services
 
                     return new AuthModel { Message = errors };
                 }
-                var adminRoleExists = await _roleManager.FindByNameAsync("Admin");
+
+                //var adminRoleExists = await _roleManager.FindByNameAsync("Admin");
+                //if ( role == adminRoleExists.Name)
 
                 //if (role == "Admin" || role == "admin")
-                if ( role == adminRoleExists.Name)
-                {
-                    // If the user selected the admin role, return a "Not Allowed" response
-                    return new AuthModel { Message = "Assigning admin role is not allowed during registration." };
-                }
+                //{
+                //    // If the user selected the admin role, return a "Not Allowed" response
+                //    return new AuthModel { Message = "Assigning admin role is not allowed during registration." };
+                //}
                 //add role to user
                 await _userManager.AddToRoleAsync(user, role);
             }
             else
             {
-                return new AuthModel { Message = "The Roles Doesnot Exist!" };
+                return new AuthModel { Message = "The Roles Does not Exist!" };
 
             }
-
-
 
             var jwtSecurityToken = await CreateJwtToken(user);
 

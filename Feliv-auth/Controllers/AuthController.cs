@@ -1,6 +1,7 @@
 ﻿using Feliv_auth.Models;
 using Feliv_auth.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Feliv_auth.Controllers
@@ -22,6 +23,11 @@ namespace Feliv_auth.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            if (role.ToLower() == "admin")
+            {
+                // If the user selected the admin role, return a "Not Allowed" response
+                return BadRequest(error :"Assigning admin role is not allowed during registration." );
+            }
             var result = await _authService.RegisterAsync(model,role);
 
             if (!result.IsAuthenticated)
